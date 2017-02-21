@@ -3,6 +3,7 @@ import sys
 import random
 import logging
 import os
+
 class AI:
     def __init__(self):
         self.name = ''
@@ -18,6 +19,7 @@ class AI:
         pass
 
     def InfoGame(self, gameData):
+        self.rows=gameData['rows']
         pass
 
     def InfoMove(self, cardData):
@@ -30,11 +32,54 @@ class AI:
         pass
 
     def CmdPickCard(self):
-        random.shuffle(self.cards)
-        return self.cards.pop()
+        self.rows.reverse()
+        def find_row(card):
+            idx=0
+            if card<self.rows[0][-1]:
+                return -1
+            for i,row in enumerate(self.rows):
+                if card<row[-1]:
+                    idx=i
+                    break
+                elif i==3 and card>row[-1]:
+                    idx=i
+            return idx
+
+        card_evaluation={}
+        for card in self.cards:
+            evaluation=0
+            idx=find_row(card)
+            if idx!=-1:
+                if len(self.rows[idx])!=5:
+                    evaluation+=1
+            card_evaluation[card]=evaluation
+        max_evaluation=max(card_evaluation.values())
+        pick_card=random.choice([ card for card in card_evaluation if card_evaluation[card]==max_evaluation])
+        self.cards.remove(pick_card)
+        return pick_card       
+
 
     def CmdPickRow(self):
-        return random.randint(0,3)
+        ##pick the row that has lowest points
+        row_num=0
+        lowest_points=70
+        for i,row in enumerate(self.rows):
+            count_points=0
+            for card in row:
+                if card==55:
+                    count_points+=7
+                elif card%11==0:
+                    count_points+=5
+                elif card%10==0:
+                    count_points+=3
+                elif card%5==0:
+                    count_points+=2
+                else:
+                    count_points+=1
+            if count_points<lowest_points:
+                count_points=lowest_points
+                row_num=i
+        return row_num
 
     def ProcessInfo(self):
         line = sys.stdin.readline()
